@@ -347,21 +347,29 @@
             return dateString;
         }
 
-        function getTreatmentMonth(firstDateStr) {
-            if (!firstDateStr) return '-';
-            let firstDate = new Date(firstDateStr);
-            if (isNaN(firstDate.getTime())) return '-';
+        function getTreatmentMonth(surgeryDateStr) {
+            if (!surgeryDateStr) return '-';
+            let surgeryDate = new Date(surgeryDateStr);
+            if (isNaN(surgeryDate.getTime())) return '-';
             
             let now = new Date();
-            let months = (now.getFullYear() - firstDate.getFullYear()) * 12;
-            months -= firstDate.getMonth();
+            let months = (now.getFullYear() - surgeryDate.getFullYear()) * 12;
+            months -= surgeryDate.getMonth();
             months += now.getMonth();
             
-            if (now.getDate() < firstDate.getDate()) {
+            if (now.getDate() < surgeryDate.getDate()) {
                 months--;
             }
+            
             let currentMonth = months + 1;
-            if (currentMonth < 1) currentMonth = 1;
+            if (currentMonth < 1) currentMonth = 1; // Henüz o gün gelmediyse bile 1. ay başlar
+            
+            // 12 ayı geçtiyse yıl formatına çevir
+            if (currentMonth > 12) {
+                let year = Math.floor((currentMonth - 1) / 12);
+                return year + ". Yıl";
+            }
+            
             return currentMonth + ". Ay";
         }
 
@@ -392,7 +400,7 @@
                             renderCancel();
                         }
                         
-                        if (field === 'firstDate') {
+                        if (field === 'surgeryDate') {
                             let treatmentCell = tr.querySelector('.treatment-month');
                             if(treatmentCell) treatmentCell.innerText = getTreatmentMonth(dateStr);
                         }
@@ -619,7 +627,7 @@
                         </select>
                     </td>
                     <td>
-                        <span class="badge light treatment-month">${getTreatmentMonth(p.firstDate)}</span>
+                        <span class="badge light treatment-month">${getTreatmentMonth(p.surgeryDate)}</span>
                     </td>
                     <td>${actionsHtml}</td>
                 </tr>
