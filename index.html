@@ -377,7 +377,7 @@
                     let tr = input.closest('tr');
                     if (!tr) return;
                     
-                    let id = parseInt(tr.getAttribute('data-id'));
+                    let id = parseFloat(tr.getAttribute('data-id'));
                     let field = input.getAttribute('data-field');
                     let patientIndex = patients.findIndex(p => p.id === id);
                     
@@ -899,7 +899,7 @@
             if(e.target.hasAttribute('contenteditable')) {
                 let tr = e.target.closest('tr');
                 if (tr) {
-                    let id = parseInt(tr.getAttribute('data-id'));
+                    let id = parseFloat(tr.getAttribute('data-id'));
                     let field = e.target.getAttribute('data-field');
                     let patientIndex = patients.findIndex(p => p.id === id);
                     
@@ -918,7 +918,7 @@
             if(e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') {
                 let tr = e.target.closest('tr');
                 if (tr) {
-                    let id = parseInt(tr.getAttribute('data-id'));
+                    let id = parseFloat(tr.getAttribute('data-id'));
                     let field = e.target.getAttribute('data-field');
                     let patientIndex = patients.findIndex(p => p.id === id);
                     
