@@ -230,7 +230,7 @@
             <div class="page-header">
                 <div>
                     <h1 class="page-title">Haftalık Takip</h1>
-                    <p class="page-subtitle">Görüşme "Tamamlandı" işaretlendiğinde tarih Veritabanına otomatik aktarılır.</p>
+                    <p class="page-subtitle">Görüşme "Tamamlandı" ve Diyet "Gönderildi" işaretlendiğinde tarih Veritabanına otomatik aktarılır.</p>
                 </div>
                 <!-- BURAYA DİKKAT -->
                 <div style="display: flex; gap: 12px;">
@@ -355,22 +355,22 @@
             return dateString;
         }
 
-        function getTreatmentMonth(surgeryDateStr) {
-            if (!surgeryDateStr) return '-';
-            let surgeryDate = new Date(surgeryDateStr);
-            if (isNaN(surgeryDate.getTime())) return '-';
+        function getTreatmentMonth(firstDateStr) {
+            if (!firstDateStr) return '-';
+            let firstDate = new Date(firstDateStr);
+            if (isNaN(firstDate.getTime())) return '-';
             
             let now = new Date();
-            let months = (now.getFullYear() - surgeryDate.getFullYear()) * 12;
-            months -= surgeryDate.getMonth();
+            let months = (now.getFullYear() - firstDate.getFullYear()) * 12;
+            months -= firstDate.getMonth();
             months += now.getMonth();
             
-            if (now.getDate() < surgeryDate.getDate()) {
+            if (now.getDate() < firstDate.getDate()) {
                 months--;
             }
             
             let currentMonth = months + 1;
-            if (currentMonth < 1) currentMonth = 1; // Henüz o gün gelmediyse bile 1. ay başlar
+            if (currentMonth < 1) currentMonth = 1;
             
             // 12 ayı geçtiyse yıl formatına çevir
             if (currentMonth > 12) {
@@ -379,19 +379,6 @@
             }
             
             return currentMonth + ". Ay";
-        }
-
-        function isLateStart(surgeryDateStr, firstDateStr) {
-            if (!surgeryDateStr || !firstDateStr) return false;
-            let sDate = new Date(surgeryDateStr);
-            let fDate = new Date(firstDateStr);
-            if (isNaN(sDate.getTime()) || isNaN(fDate.getTime())) return false;
-            
-            // İki tarih arasındaki farkı gün cinsinden hesapla
-            let diffTime = fDate.getTime() - sDate.getTime();
-            let diffDays = diffTime / (1000 * 3600 * 24);
-            
-            return diffDays > 21;
         }
 
         function initDatePickers() {
@@ -421,16 +408,9 @@
                             renderCancel();
                         }
                         
-                        if (field === 'surgeryDate' || field === 'firstDate') {
+                        if (field === 'firstDate') {
                             let treatmentCell = tr.querySelector('.treatment-month');
-                            if(treatmentCell) {
-                                treatmentCell.innerText = getTreatmentMonth(patients[patientIndex].surgeryDate);
-                                if (isLateStart(patients[patientIndex].surgeryDate, patients[patientIndex].firstDate)) {
-                                    treatmentCell.className = "badge late treatment-month";
-                                } else {
-                                    treatmentCell.className = "badge light treatment-month";
-                                }
-                            }
+                            if(treatmentCell) treatmentCell.innerText = getTreatmentMonth(dateStr);
                         }
                         saveData(true);
                     }
@@ -637,8 +617,6 @@
                            </div>
                        </div>`;
                 
-                let badgeClass = isLateStart(p.surgeryDate, p.firstDate) ? "badge late treatment-month" : "badge light treatment-month";
-                
                 return `
                 <tr data-id="${p.id}" style="opacity: ${rowOpacity};">
                     <td><strong contenteditable="true" data-field="name">${p.name}</strong></td>
@@ -659,7 +637,7 @@
                         </select>
                     </td>
                     <td>
-                        <span class="${badgeClass}">${getTreatmentMonth(p.surgeryDate)}</span>
+                        <span class="badge light treatment-month">${getTreatmentMonth(p.firstDate)}</span>
                     </td>
                     <td>${actionsHtml}</td>
                 </tr>
