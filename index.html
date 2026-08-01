@@ -106,6 +106,7 @@
         .badge.red { background: var(--status-red-bg); color: var(--status-red); }
         .badge.gray { background: #E0E0E0; color: #555; }
         .badge.light { background: #F4F6F4; color: var(--text-dark); font-weight: 600; border: 1px solid var(--border-color);}
+        .badge.late { background: var(--status-yellow-bg); color: #D89B00; font-weight: 600; border: 1px solid #FDE68A;}
 
         /* 3 Nokta Menü & İkon Butonlar */
         .dot-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); padding: 4px 12px; border-radius: 4px; font-weight: bold; transition: 0.2s;}
@@ -373,6 +374,19 @@
             return currentMonth + ". Ay";
         }
 
+        function isLateStart(surgeryDateStr, firstDateStr) {
+            if (!surgeryDateStr || !firstDateStr) return false;
+            let sDate = new Date(surgeryDateStr);
+            let fDate = new Date(firstDateStr);
+            if (isNaN(sDate.getTime()) || isNaN(fDate.getTime())) return false;
+            
+            // İki tarih arasındaki farkı gün cinsinden hesapla
+            let diffTime = fDate.getTime() - sDate.getTime();
+            let diffDays = diffTime / (1000 * 3600 * 24);
+            
+            return diffDays > 21;
+        }
+
         function initDatePickers() {
             flatpickr(".date-picker", {
                 dateFormat: "Y-m-d",
@@ -400,9 +414,16 @@
                             renderCancel();
                         }
                         
-                        if (field === 'surgeryDate') {
+                        if (field === 'surgeryDate' || field === 'firstDate') {
                             let treatmentCell = tr.querySelector('.treatment-month');
-                            if(treatmentCell) treatmentCell.innerText = getTreatmentMonth(dateStr);
+                            if(treatmentCell) {
+                                treatmentCell.innerText = getTreatmentMonth(patients[patientIndex].surgeryDate);
+                                if (isLateStart(patients[patientIndex].surgeryDate, patients[patientIndex].firstDate)) {
+                                    treatmentCell.className = "badge late treatment-month";
+                                } else {
+                                    treatmentCell.className = "badge light treatment-month";
+                                }
+                            }
                         }
                         saveData(true);
                     }
@@ -606,7 +627,9 @@
                                <div class="action-item danger" onclick="deletePatient(${p.id})"><i class="ph ph-trash"></i> Hastayı Sil</div>
                            </div>
                        </div>`;
-
+                
+                let badgeClass = isLateStart(p.surgeryDate, p.firstDate) ? "badge late treatment-month" : "badge light treatment-month";
+                
                 return `
                 <tr data-id="${p.id}" style="opacity: ${rowOpacity};">
                     <td><strong contenteditable="true" data-field="name">${p.name}</strong></td>
@@ -627,7 +650,7 @@
                         </select>
                     </td>
                     <td>
-                        <span class="badge light treatment-month">${getTreatmentMonth(p.surgeryDate)}</span>
+                        <span class="${badgeClass}">${getTreatmentMonth(p.surgeryDate)}</span>
                     </td>
                     <td>${actionsHtml}</td>
                 </tr>
