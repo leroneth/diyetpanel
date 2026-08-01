@@ -192,7 +192,11 @@
                     <h2 class="page-title">Hasta Veritabanı</h2>
                     <p class="page-subtitle">Buraya eklenen 'Aktif' hastalar Haftalık Takip sekmesinde görünür.</p>
                 </div>
-                <button class="btn" onclick="addPatient()"><i class="ph ph-plus"></i> Yeni Hasta Ekle</button>
+                <!-- YENİ EKLENEN KISIM -->
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn" onclick="syncFromSheets()" style="background-color: #0F9D58;"><i class="ph ph-file-xls"></i> Sheets'ten Çek</button>
+                    <button class="btn" onclick="addPatient()"><i class="ph ph-plus"></i> Yeni Hasta Ekle</button>
+                </div>
             </div>
             
             <div class="table-container">
@@ -399,7 +403,75 @@
             });
         }
 
-        // --- SIRALAMA (SORTING) ---
+        // --- GOOGLE SHEETS ENTEGRASYON FONKSİYONU ---
+        async function syncFromSheets() {
+            const btn = document.querySelector('button[onclick="syncFromSheets()"]');
+            const originalText = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Çekiliyor...';
+                btn.style.opacity = '0.7';
+            }
+
+            try {
+                // 1. Yukarıdaki adımlardan aldığın YENİ Sheets URL'sini buraya yapıştır
+                const sheetsWebhookUrl = 'https://script.google.com/macros/s/AKfycbwzjSgN4zWmd02MUVBwchuoJ7ZMdt53dUCKhaChTQjjX2r0ZFiv7OnNLXbyjr9w6GxaHw/exec';
+                
+                const response = await fetch(sheetsWebhookUrl);
+                const fetchedPatients = await response.json();
+
+                let isUpdated = false;
+
+                // 2. Sheets'ten gelen her satır için kontrol döngüsü
+                fetchedPatients.forEach(sheetPatient => {
+                    // HTML'deki hastalarımız arasında bu isim var mı diye bak (Büyük/küçük harf duyarsız)
+                    let existingIndex = patients.findIndex(p => p.name.toLowerCase() === sheetPatient.name.toLowerCase());
+
+                    if (existingIndex > -1) {
+                        // HASTA VARSA: Eksik bilgileri veya yeni güncellemeleri Sheets'ten alarak üzerine yaz
+                        if (sheetPatient.surgeryDate) patients[existingIndex].surgeryDate = sheetPatient.surgeryDate;
+                        if (sheetPatient.firstDate) patients[existingIndex].firstDate = sheetPatient.firstDate;
+                        if (sheetPatient.commType) patients[existingIndex].commType = sheetPatient.commType;
+                        isUpdated = true;
+                    } else {
+                        // HASTA YOKSA: Yeni hasta olarak veritabanının en üstüne ekle
+                        patients.unshift({
+                            id: Date.now() + Math.random(),
+                            name: sheetPatient.name,
+                            surgeryDate: sheetPatient.surgeryDate,
+                            firstDate: sheetPatient.firstDate,
+                            latestDate: "",
+                            commType: sheetPatient.commType,
+                            status: "Aktif",
+                            weeklyDate: "",
+                            weeklyTime: "",
+                            weeklyOpStatus: "Bekliyor",
+                            weeklyDietStatus: "Bekliyor",
+                            weeklyNote: "-"
+                        });
+                        isUpdated = true;
+                    }
+                });
+
+                if (isUpdated) {
+                    saveData(true);
+                    renderAll();
+                    alert("Sheets verileri başarıyla senkronize edildi!");
+                } else {
+                    alert("Listeye eklenecek yeni bir hasta veya güncelleme bulunamadı.");
+                }
+
+            } catch (error) {
+                console.error("Sheets verisi çekilirken hata:", error);
+                alert("E-Tabloya bağlanılamadı. Lütfen Webhook URL'sini kontrol edin.");
+            } finally {
+                if (btn) {
+                    btn.innerHTML = originalText;
+                    btn.style.opacity = '1';
+                }
+            }
+        }
+     
+     // --- SIRALAMA (SORTING) ---
         function handleSort(table, field) {
             if (sortConfig[table].field === field) {
                 sortConfig[table].dir = sortConfig[table].dir === 'asc' ? 'desc' : 'asc';
