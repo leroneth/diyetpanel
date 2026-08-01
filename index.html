@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='%238CA18B'%3E%3Cpath d='M213.66,42.34a8,8,0,0,0-11.32,0L174.52,70.16C153.28,49,121.27,42.54,92.51,53.25A104,104,0,0,0,24,152v64a8,8,0,0,0,8,8h64A104,104,0,0,0,195.25,128c0-16.59-3.79-32.32-11.13-46.68l29.54-29.54A8,8,0,0,0,213.66,42.34Z'/%3E%3C/svg%3E">
     <!-- Flatpickr (Tarih Seçici İçin) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -49,6 +50,24 @@
         .nav-item { padding: 12px 16px; border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; gap: 12px; color: var(--text-muted); font-weight: 500; transition: all 0.2s; }
         .nav-item:hover { background-color: var(--beige); color: var(--text-dark); }
         .nav-item.active { background-color: var(--primary-sage-light); color: var(--primary-sage); }
+
+        /* Navbar Düzeni ve Daraltma Stilleri */
+        .sidebar { transition: width 0.3s ease; overflow-x: hidden; }
+        
+        .sidebar-header { display: flex; align-items: center; justify-content: space-between; padding: 0 20px; margin-bottom: 40px; height: 40px; }
+        .sidebar-header .logo { padding: 0; margin-bottom: 0; }
+        
+        .toggle-btn { background: none; border: none; font-size: 22px; color: var(--text-muted); cursor: pointer; transition: 0.2s; padding: 6px; border-radius: 8px; display: flex; }
+        .toggle-btn:hover { background: var(--bg-color); color: var(--primary-sage); }
+        
+        /* Daraltılmış Durum (Collapsed) */
+        .sidebar.collapsed { width: 84px; }
+        .sidebar.collapsed .sidebar-header { padding: 0; justify-content: center; }
+        .sidebar.collapsed .logo { display: none; }
+        .sidebar.collapsed .nav-text { display: none; }
+        .sidebar.collapsed .nav-menu { padding: 0 12px; }
+        .sidebar.collapsed .nav-item { padding: 12px; justify-content: center; }
+        .sidebar.collapsed .nav-item i { font-size: 22px; }
 
         /* Main Content */
         .main-content { flex: 1; padding: 32px 40px; overflow-y: auto; }
@@ -128,12 +147,21 @@
 </head>
 <body>
 
-    <aside class="sidebar">
-        <div class="logo"><i class="ph ph-leaf"></i> DiyetPanel</div>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo"><i class="ph ph-leaf"></i> <span class="nav-text">DiyetPanel</span></div>
+            <button class="toggle-btn" onclick="toggleSidebar()"><i class="ph ph-list"></i></button>
+        </div>
         <ul class="nav-menu">
-            <li class="nav-item active" onclick="switchTab('dashboard', this)"><i class="ph ph-squares-four"></i> Ana Panel & DB</li>
-            <li class="nav-item" onclick="switchTab('weekly', this)"><i class="ph ph-calendar-check"></i> Haftalık Takip</li>
-            <li class="nav-item" onclick="switchTab('cancellations', this)"><i class="ph ph-x-circle"></i> İptal Takibi</li>
+            <li class="nav-item active" onclick="switchTab('dashboard', this)" title="Ana Panel & DB">
+                <i class="ph ph-squares-four"></i> <span class="nav-text">Ana Panel & DB</span>
+            </li>
+            <li class="nav-item" onclick="switchTab('weekly', this)" title="Haftalık Takip">
+                <i class="ph ph-calendar-check"></i> <span class="nav-text">Haftalık Takip</span>
+            </li>
+            <li class="nav-item" onclick="switchTab('cancellations', this)" title="İptal Takibi">
+                <i class="ph ph-x-circle"></i> <span class="nav-text">İptal Takibi</span>
+            </li>
         </ul>
     </aside>
 
@@ -330,7 +358,16 @@
             saveData(false);
         }
 
-        // --- YARDIMCI FONKSİYONLAR ---
+        // --- NAVBAR DARALTMA MANTIĞI ---
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+            
+            // Kullanıcının tercihini tarayıcıya kaydet
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+        }
+     
+         // --- YARDIMCI FONKSİYONLAR ---
         
         function getTimeOptions(selectedTime) {
             let opts = `<option value="">Saat</option>`;
@@ -1071,6 +1108,11 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            // Eğer daha önce daraltılmışsa sayfayı o şekilde aç
+            if (localStorage.getItem('sidebarCollapsed') === 'true') {
+                document.getElementById('sidebar').classList.add('collapsed');
+            }
+            
             updateSortIcons('db');
             updateSortIcons('weekly');
             updateSortIcons('cancel');
