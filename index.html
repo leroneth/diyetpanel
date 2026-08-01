@@ -195,7 +195,6 @@
                 <!-- YENİ EKLENEN KISIM -->
                 <div style="display: flex; gap: 12px;">
                     <button class="btn" onclick="syncFromSheets()" style="background-color: #0F9D58;"><i class="ph ph-file-xls"></i> Sheets'ten Çek</button>
-                    <button class="btn" onclick="addPatient()"><i class="ph ph-plus"></i> Yeni Hasta Ekle</button>
                 </div>
             </div>
             
@@ -971,8 +970,12 @@
                             renderCancel();
                         }
 
+                        // Durum değiştiğinde (Aktif, Tatilde vs.) anında kaydet ve tüm ekranı yeniden çiz
                         if (field === 'status') {
-                            setTimeout(() => { renderAll(); }, 50);
+                            saveData(true);
+                            renderAll();
+                            updateDashboard();
+                            return; // Ekran yeniden çizildiği için alttaki kodların çalışmasına gerek yok
                         }
 
                         if (e.target.tagName === 'SELECT' && field !== 'commType' && field !== 'weeklyTime') {
@@ -1016,7 +1019,14 @@
                 selectObj.style.color = 'var(--status-orange)';
                 selectObj.style.border = 'none';
             }
+            else if (val === 'Tatilde') {
+                // Tatilde için ferah bir açık mavi
+                selectObj.style.backgroundColor = '#E3F2FD'; 
+                selectObj.style.color = '#1976D2';
+                selectObj.style.border = 'none';
+            }
         }
+        
 
         let saveTimeout;
         function showSaveIndicator() {
