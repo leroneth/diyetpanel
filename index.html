@@ -909,7 +909,7 @@
                 let isUpdated = false;
 
                 events.forEach(eventData => {
-                    const eventName = eventData.summary.split('-')[0].trim();
+                    const eventName = eventData.title.split('-')[0].trim();
                     const eventDateObj = new Date(eventData.startTime);
                     
                     const year = eventDateObj.getFullYear();
