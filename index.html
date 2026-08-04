@@ -552,6 +552,7 @@
             let dir = sortConfig[tableType].dir === 'asc' ? 1 : -1;
 
             return array.sort((a, b) => {
+                // Veritabanı için inaktif hastaları en alta atma kuralı
                 if (tableType === 'db') {
                     if (a.status === 'Takip Sonlandı' && b.status !== 'Takip Sonlandı') return 1;
                     if (a.status !== 'Takip Sonlandı' && b.status === 'Takip Sonlandı') return -1;
@@ -560,14 +561,25 @@
                 let valA = a[field] || '';
                 let valB = b[field] || '';
 
-                if (field.includes('Date') || field === 'date') {
+                // Haftalık Takip randevu tarihi ise saati de işin içine kat
+                if (field === 'weeklyDate') {
+                    let timeA = a.weeklyTime || '00:00';
+                    let timeB = b.weeklyTime || '00:00';
+                    valA = valA ? new Date(valA + 'T' + timeA).getTime() : 0;
+                    valB = valB ? new Date(valB + 'T' + timeB).getTime() : 0;
+                } 
+                // Diğer standart tarih sütunları
+                else if (field.includes('Date') || field === 'date') {
                     valA = new Date(valA).getTime() || 0;
                     valB = new Date(valB).getTime() || 0;
-                } else if (typeof valA === 'string') {
+                } 
+                // Metin (İsim, Durum vb.) sütunları
+                else if (typeof valA === 'string') {
                     valA = valA.toLowerCase();
                     valB = valB.toLowerCase();
                 }
 
+                // Sıralama Yönü
                 if (valA < valB) return -1 * dir;
                 if (valA > valB) return 1 * dir;
                 return 0;
